@@ -4,14 +4,14 @@ services:
   mysql:
     image: mysql:5.7
     restart: always
-#    platform: linux/amd64
+    #    platform: linux/amd64
     environment:
       MYSQL_ROOT_PASSWORD: yjfc4883212
       MYSQL_DATABASE: amp
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
-      - "3311:3306"
+      - "3315:3306"
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./mysql-data:/var/lib/mysql
@@ -21,9 +21,9 @@ services:
   redis:
     image: redis
     restart: always
-#    platform: linux/amd64
+    #    platform: linux/amd64
     ports:
-      - "6382:6379"
+      - "6385:6379"
     volumes:
       - ./redis-data:/data
     networks:
