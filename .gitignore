@@ -34,5 +34,7 @@ go.sum
 *_app
 
 mysql-data/
+redis-data
+
 
 
