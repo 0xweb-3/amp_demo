@@ -51,6 +51,7 @@ func InfraRDbOption(host string, port int) InfraOption {
 	}
 }
 
+// Init 初始化方法
 func (i *infra) Init(options ...InfraOption) {
 	for _, option := range options {
 		option(i)

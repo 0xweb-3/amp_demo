@@ -16,7 +16,7 @@ import (
 
 func OpenDB() (*gorm.DB, error) {
 	// 参考 https://github.com/go-sql-driver/mysql#dsn-data-source-name 获取详情
-	dsn := "root:yjfc4883212@tcp(127.0.0.1:3315)/amp?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:yjfc4883212@tcp(192.168.21.2:3315)/amp?charset=utf8mb4&parseTime=True&loc=Local"
 	// 设置全局的logger，这个logger在我们执行每个sql语句的时候会打印每一行sql
 
 	newLogger := logger.New(
