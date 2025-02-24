@@ -13,7 +13,7 @@ func TestHttpServer(t *testing.T) {
 	server := NewHttpSever(":8080")
 
 	// 注册一个简单的路由
-	server.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+	server.HandleFunc("/hello.proto", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!")
 	})
 

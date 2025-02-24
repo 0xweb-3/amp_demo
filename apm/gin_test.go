@@ -13,7 +13,7 @@ func TestGinHttpServer(t *testing.T) {
 	server := NewGinHttpServer(":8080")
 
 	// 注册一个简单的路由
-	server.Handle(http.MethodGet, "/hello", func(c *gin.Context) {
+	server.Handle(http.MethodGet, "/hello.proto", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, Gin!")
 	})
 

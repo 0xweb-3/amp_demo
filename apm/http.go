@@ -62,7 +62,7 @@ func (h *HttpServer) close() error {
 //
 //func main() {
 //	mux := http.NewServeMux()
-//	mux.HandleFunc("/hello", helloHandler)
+//	mux.HandleFunc("/hello.proto", helloHandler)
 //
 //	server := &http.Server{
 //		Addr:    ":8080",
