@@ -2,6 +2,7 @@ package apm
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
 
@@ -47,6 +48,8 @@ func (h *HttpServer) HandleFunc(pattern string, handler func(w http.ResponseWrit
 func (h *HttpServer) Start() {
 	go func() {
 		err := h.ListenAndServe() // 启动 HTTP 服务器
+
+		fmt.Println("启动服务")
 		if err != nil {
 			panic(err) // 如果遇到错误（比如端口被占用），抛出 panic
 		}

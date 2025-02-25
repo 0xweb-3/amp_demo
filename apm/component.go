@@ -36,6 +36,7 @@ func (e *endPoint) Start() {
 		<-quit
 		e.Shutdown()
 	}()
+	<-e.stop
 }
 
 func (e *endPoint) Shutdown() {

@@ -13,7 +13,7 @@ func init() {
 type log struct{}
 
 // logger 是我们用来记录日志的全局实例
-var logger = &log{}
+var Logger = &log{}
 
 // Info 方法用于记录 INFO 级别的日志
 // ctx: 上下文对象，一般用于跟踪请求的生命周期

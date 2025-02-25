@@ -9,11 +9,11 @@ type Sku struct {
 	Num   int    `gorm:"type:int(11);not null;default:0"`
 }
 
-type Order struct {
-	db.BaseModel
-	OrderId string `gorm:"type:varchar(200);not null;default:''"`
-	SkuId   string `gorm:"type:varchar(200);not null;default:''"`
-	Num     int    `gorm:"type:int(11);not null;default:0"`
-	Price   int    `gorm:"type:int(11);not null;default:0"`
-	Uid     uint64 `gorm:"type:int(11);not null;default:0"`
-}
+//type Order struct {
+//	db.BaseModel
+//	OrderId string `gorm:"type:varchar(200);not null;default:''"`
+//	SkuId   string `gorm:"type:varchar(200);not null;default:''"`
+//	Num     int    `gorm:"type:int(11);not null;default:0"`
+//	Price   int    `gorm:"type:int(11);not null;default:0"`
+//	Uid     uint64 `gorm:"type:int(11);not null;default:0"`
+//}
