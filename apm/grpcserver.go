@@ -13,17 +13,25 @@ type GrpcServer struct {
 	addr         string // 服务器地址
 }
 
+func (g *GrpcServer) Close() {
+	g.Server.GracefulStop()
+}
+
 // NewGrpcServer 创建并返回一个新的 gRPC 服务器，指定了监听地址
 // 参数 addr: gRPC 服务监听的地址
 func NewGrpcServer(addr string) *GrpcServer {
 	// 创建一个新的 gRPC 服务器，并配置了拦截器
 	svc := grpc.NewServer(grpc.UnaryInterceptor(unaryServerInterceptor())) // 使用自定义的拦截器
-	return &GrpcServer{svc, addr}                                          // 返回一个封装了 gRPC 服务器的 GrpcServer 实例
+	//return &GrpcServer{svc, addr}                                          // 返回一个封装了 gRPC 服务器的 GrpcServer 实例
+	server := &GrpcServer{svc, addr}
+	globalStarters = append(globalStarters, server)
+	globalClosers = append(globalClosers, server)
+	return server
 }
 
 // start 启动 gRPC 服务器并开始监听指定的地址
 // 这个方法在 goroutine 中异步执行 gRPC 服务器的服务
-func (g *GrpcServer) start() {
+func (g *GrpcServer) Start() {
 	// 创建 TCP 监听器，绑定到 g.Server.addr
 	l, err := net.Listen("tcp", g.addr)
 	if err != nil {

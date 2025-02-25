@@ -22,7 +22,11 @@ func NewHttpSever(addr string) *HttpServer {
 	// 创建 http.Server 实例，指定监听的地址和使用 mux 作为请求处理器
 	server := &http.Server{Addr: addr, Handler: mux}
 	// 返回一个包含 mux 和 server 的 HttpServer 实例
-	return &HttpServer{mux: mux, Server: server}
+	//return &HttpServer{mux: mux, Server: server}
+	s := &HttpServer{mux: mux, Server: server}
+	globalStarters = append(globalStarters, s)
+	globalClosers = append(globalClosers, s)
+	return s
 }
 
 // Handle 是 HttpServer 的一个方法，用于注册处理指定 pattern 的请求。
@@ -52,8 +56,8 @@ func (h *HttpServer) Start() {
 // close 优雅关闭 HTTP 服务器，调用 Shutdown 方法来停止服务器的运行。
 // 通过 context.Background() 确保即使在没有超时的情况下，也能平滑关闭。
 // 该方法返回服务器关闭时的错误信息。
-func (h *HttpServer) close() error {
-	return h.Shutdown(context.Background()) // 调用 Shutdown 方法停止 HTTP 服务器
+func (h *HttpServer) Close() {
+	h.Shutdown(context.Background()) // 调用 Shutdown 方法停止 HTTP 服务器
 }
 
 //func helloHandler(w http.ResponseWriter, r *http.Request) {
