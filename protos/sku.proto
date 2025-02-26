@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package="./;protos";
+
+
+service SkuService {
+  rpc decreaseStock(Sku) returns (Sku);
+}
+
+message Sku {
+  string name = 1;
+  uint64 id = 2;
+  int32 price = 3;
+  int32 num = 4;
+}
