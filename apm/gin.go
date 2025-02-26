@@ -12,8 +12,8 @@ type GinHttpServer struct {
 	server *http.Server
 }
 
-// NewGinHttpServer 创建一个新的 GinHttpServer 实例
-func NewGinHttpServer(addr string) *GinHttpServer {
+// NewGinServer 创建一个新的 GinHttpServer 实例
+func NewGinServer(addr string) *GinHttpServer {
 	// 创建一个 Gin 引擎实例
 	engine := gin.Default()
 	// 创建一个 http.Server 实例
@@ -22,7 +22,10 @@ func NewGinHttpServer(addr string) *GinHttpServer {
 		Handler: engine,
 	}
 	// 返回 GinHttpServer 实例
-	return &GinHttpServer{engine: engine, server: server}
+	s := &GinHttpServer{engine: engine, server: server}
+	globalStarters = append(globalStarters, s)
+	globalClosers = append(globalClosers, s)
+	return s
 }
 
 // Handle 注册一个路由和对应的处理函数
@@ -51,6 +54,6 @@ func (g *GinHttpServer) Start() {
 }
 
 // Close 优雅关闭服务器
-func (g *GinHttpServer) Close() error {
-	return g.server.Shutdown(context.Background())
+func (g *GinHttpServer) Close() {
+	g.server.Shutdown(context.Background())
 }

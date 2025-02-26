@@ -10,7 +10,7 @@ import (
 // 测试 GinHttpServer 启动和路由注册
 func TestGinHttpServer(t *testing.T) {
 	// 创建一个新的 GinHttpServer 实例
-	server := NewGinHttpServer(":8080")
+	server := NewGinServer(":8080")
 
 	// 注册一个简单的路由
 	server.Handle(http.MethodGet, "/hello.proto", func(c *gin.Context) {
@@ -56,7 +56,7 @@ func TestGinHttpServer(t *testing.T) {
 // 测试 GinHttpServer 启动失败的情况（例如端口被占用）
 func TestGinHttpServer_StartFail(t *testing.T) {
 	// 创建一个新的 GinHttpServer 实例，并设置端口为 8080
-	server := NewGinHttpServer(":8080")
+	server := NewGinServer(":8080")
 
 	// 启动第一个服务器
 	go server.Start()
@@ -65,6 +65,6 @@ func TestGinHttpServer_StartFail(t *testing.T) {
 	time.Sleep(time.Second)
 
 	// 创建第二个服务器实例，尝试绑定到同一端口
-	server2 := NewGinHttpServer(":8080")
+	server2 := NewGinServer(":8080")
 	server2.Start()
 }

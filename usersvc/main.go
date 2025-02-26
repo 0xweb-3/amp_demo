@@ -1,19 +1,27 @@
-package usersvc
+package main
 
-import "github.com/0xweb-3/amp_demo/common/db"
+import (
+	"github.com/0xweb-3/amp_demo/apm"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
 
-type Sku struct {
-	db.BaseModel
-	Name  string `gorm:"type:varchar(20);not null;default:''"`
-	Price int    `gorm:"type:int(11);not null;default:0"`
-	Num   int    `gorm:"type:int(11);not null;default:0"`
+func main() {
+	// 初始化db,http，grpcClient
+	dsn := "root:yjfc4883212@tcp(192.168.21.2:3315)/amp?charset=utf8mb4&parseTime=True&loc=Local"
+	apm.Infra.Init(apm.InfraDbOption(dsn))
+
+	// todo grpcClient 初始化
+	ginServer := apm.NewGinServer(":8082")
+
+	// 注入处理函数
+	ginServer.Handle(http.MethodGet, "/test", func(ctx *gin.Context) {
+		apm.GinStatus.OK(ctx)
+	})
+
+	//.HandleFunc("/order/add", api.Order.Add)
+	//ginServer.HandleFunc("/order/get", api.Order.Get)
+
+	// 启动所有封装的服务
+	apm.EndPoint.Start()
 }
-
-//type Order struct {
-//	db.BaseModel
-//	OrderId string `gorm:"type:varchar(200);not null;default:''"`
-//	SkuId   string `gorm:"type:varchar(200);not null;default:''"`
-//	Num     int    `gorm:"type:int(11);not null;default:0"`
-//	Price   int    `gorm:"type:int(11);not null;default:0"`
-//	Uid     uint64 `gorm:"type:int(11);not null;default:0"`
-//}
