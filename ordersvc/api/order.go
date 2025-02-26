@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"github.com/0xweb-3/amp_demo/apm"
+	"github.com/0xweb-3/amp_demo/ordersvc/grpcclient"
 	"github.com/0xweb-3/amp_demo/ordersvc/model"
+	"github.com/0xweb-3/amp_demo/protos"
 	"net/http"
 	"strconv"
 )
@@ -23,9 +25,22 @@ func (o *order) Add(w http.ResponseWriter, r *http.Request) {
 	// todo 检查用户信息
 
 	// todo 库存的扣减
+	_, err := grpcclient.SkuClient.DecreaseStock(context.TODO(), &protos.Sku{
+		Id:  10,
+		Num: 1,
+	})
+	if err != nil {
+		apm.Logger.Error(context.TODO(), "Order_Add", map[string]any{
+			"uid":   uid,
+			"skuId": skuId,
+			"num":   num,
+		}, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	//创建订单
-	err := apm.Infra.DB.Save(&model.Order{
+	err = apm.Infra.DB.Save(&model.Order{
 		SkuId: uint64(skuId),
 		Num:   num,
 		Price: 100,
