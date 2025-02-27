@@ -1,4 +1,4 @@
-receivers:
+receivers: # 接收器
   otlp:
     protocols:
       grpc:
@@ -8,18 +8,18 @@ processors:
   batch:
   tail_sampling:
     decision_wait: 5s
-    num_traces: 1
+    num_traces: 50000
     expected_new_traces_per_sec: 1
     policies:
       [
         {
-          name: test-policy-11,
+          name: error-always-sample,
           type: boolean_attribute,
-          boolean_attribute: { key: slowsql, value: true }
+          boolean_attribute: { key: error, value: true }
         }
       ]
 
-exporters:
+exporters: # 导出器
   debug:
   otlp/jaeger:
     endpoint: http://jaeger:4317
@@ -31,9 +31,9 @@ extensions:
   zpages:
     endpoint: 0.0.0.0:55679
 service:
-  extensions: [ health_check, pprof,zpages ]
-  pipelines:
-    traces:
+  extensions: [ health_check, pprof, zpages ]
+  pipelines: # 定义怎么去用
+    traces: #
       receivers: [ otlp ]
       processors: [ batch,tail_sampling ]
       exporters: [ debug,otlp/jaeger ] # 导出到debug和jaeger中

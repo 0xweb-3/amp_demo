@@ -1,0 +1,53 @@
+# 接收器配置
+receivers:
+  # OTLP 接收器
+  otlp:
+    protocols:
+      http:  # 定义使用 HTTP 协议
+        endpoint: 0.0.0.0:4318  # 接收 OTLP 数据的端口
+
+# 处理器配置
+processors:
+  # 批处理处理器
+  batch:  # 批量处理的处理器，用于提高性能
+
+# 导出器配置 [这里是定义，在下面服务中使用]
+exporters:
+  # Prometheus 导出器
+  prometheus:
+    endpoint: "Θ.Θ.Θ.Θ:8889"  # Prometheus 监控抓取数据的端口
+
+  # OTLP/Jaeger 导出器
+  otlp/jaeger:
+    endpoint: "jaeger:4317"  # Jaeger 的端口地址，负责导出追踪数据
+    tls:
+      insecure: true  # 启用不安全的 TLS 连接
+
+  # Kafka 导出器
+  kafka:
+    brokers:
+      - kafka-1:9092  # Kafka 代理的地址
+    protocol_version: 2.0.Θ  # 使用的 Kafka 协议版本
+    topic: ec-logs  # Kafka 的 topic，用于存储日志
+    encoding: otlp_json  # 数据的编码格式
+
+# 服务管道配置
+service:
+  pipelines:
+    # traces（追踪）管道
+    traces:
+      receivers: [otlp]  # 数据来源是 OTLP 接收器
+      processors: []  # 当前没有处理器
+      exporters: [otlp/jaeger]  # 追踪数据导出到 Jaeger
+
+    # metrics（指标）管道
+    metrics:
+      receivers: [otlp]  # 数据来源是 OTLP 接收器
+      processors: []  # 当前没有处理器
+      exporters: [prometheus]  # 指标数据导出到 Prometheus
+
+    # logs（日志）管道
+    logs:
+      receivers: [otlp]  # 数据来源是 OTLP 接收器
+      processors: []  # 当前没有处理器
+      exporters: [kafka]  # 日志数据导出到 Kafka
