@@ -1,0 +1,39 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+  tail_sampling:
+    decision_wait: 5s
+    num_traces: 1
+    expected_new_traces_per_sec: 1
+    policies:
+      [
+        {
+          name: test-policy-11,
+          type: boolean_attribute,
+          boolean_attribute: { key: slowsql, value: true }
+        }
+      ]
+
+exporters:
+  debug:
+  otlp/jaeger:
+    endpoint: http://jaeger:4317
+    tls:
+      insecure: true
+extensions:
+  health_check:
+  pprof:
+  zpages:
+    endpoint: 0.0.0.0:55679
+service:
+  extensions: [ health_check, pprof,zpages ]
+  pipelines:
+    traces:
+      receivers: [ otlp ]
+      processors: [ batch,tail_sampling ]
+      exporters: [ debug,otlp/jaeger ] # 导出到debug和jaeger中
