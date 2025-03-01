@@ -116,7 +116,7 @@ func main() {
 		attribute.String("attrA", "chocolate"),
 		attribute.String("attrB", "raspberry"),
 		attribute.String("attrC", "vanilla"),
-		attribute.Bool("slowsql", true),
+		//attribute.Bool("slowsql", true),
 	}
 
 	// work begins

@@ -16,18 +16,25 @@ receivers: # 接收器
 
 processors:
   batch:
-#  tail_sampling:
-#    decision_wait: 5s
-#    num_traces: 50000
-#    expected_new_traces_per_sec: 1
-#    policies:
-#      [
+  # 后置采样的配置
+  tail_sampling:
+    decision_wait: 5s
+    num_traces: 1
+    expected_new_traces_per_sec: 1
+    policies:
+      [
+        {
+          name: test-policy-11,
+          type: boolean_attribute,
+          boolean_attribute: { key: slowsql, value: true } # 慢查询
+        }
+#        ,
 #        {
-#          name: error-always-sample,
-#          type: boolean_attribute,
-#          boolean_attribute: { key: error, value: true }
+#          name: test-policy-2,
+#          type: latency,
+#          latency: { threshold_ms: 5000, upper_threshold_ms: 10000 } # 时间
 #        }
-#      ]
+      ]
 
 exporters: # 导出器
   debug:
