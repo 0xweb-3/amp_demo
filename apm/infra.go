@@ -3,10 +3,20 @@ package apm
 import (
 	"context"
 	"fmt"
+	"github.com/0xweb-3/amp_demo/apm/internal"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"time"
 )
 
 // 基础设施
@@ -49,6 +59,55 @@ func InfraRDbOption(host string, port int) InfraOption {
 			panic(err)
 		}
 	}
+}
+
+func InfraEnableApm(otelEndpoint) InfraOption {
+	return func(infra *infra) {
+		ctx := context.Background()
+		res, err := resource.New(ctx,
+			resource.WithAttributes(
+				semconv.ServiceName(internal.BuildInfo.AppName()),
+			),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		conn, err := grpc.DialContext(ctx, otelEndpoint,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithBlock(),
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+		if err != nil {
+			panic(err)
+		}
+
+		bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
+		tracerProvider := sdktrace.NewTracerProvider(
+			sdktrace.WithSampler(sdktrace.AlwaysSample()),
+			sdktrace.WithResource(res),
+			sdktrace.WithSpanProcessor(bsp),
+		)
+		otel.SetTracerProvider(tracerProvider)
+		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{}))
+		globalClosers = append(globalClosers, &traceProviderComponent{provider: tracerProvider})
+	}
+}
+
+type traceProviderComponent struct {
+	provider *sdktrace.TracerProvider
+}
+
+func (t *traceProviderComponent) Close() {
+	t.provider.Shutdown(context.Background())
 }
 
 // Init 初始化方法

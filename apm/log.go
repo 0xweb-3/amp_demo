@@ -3,12 +3,17 @@ package apm
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+	"time"
 )
 
 func init() {
 	// 设置 logrus 格式化输出为 JSON 格式
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 }
+
+const traceId = "traceId"
 
 type log struct{}
 
@@ -48,6 +53,11 @@ func (l *log) Debug(ctx context.Context, action string, kv map[string]any) {
 // kv: 额外的日志信息
 // err: 需要记录的错误信息
 func (l *log) Error(ctx context.Context, action string, kv map[string]any, err error) {
-	kv["action"] = action                        // 为日志添加 action 字段
+	kv["action"] = action // 为日志添加 action 字段
+	if span := trace.SpanFromContext(ctx); span != nil {
+		kv[traceId] = span.SpanContext().TraceID().String()
+		span.SetAttributes(attribute.Bool("error", true))
+		span.RecordError(err, trace.WithStackTrace(true), trace.WithTimestamp(time.Now()))
+	}
 	logrus.WithFields(kv).WithError(err).Error() // 输出 Error 级别的日志，并附带错误信息
 }

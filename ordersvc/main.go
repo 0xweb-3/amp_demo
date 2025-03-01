@@ -11,7 +11,11 @@ import (
 func main() {
 	// 初始化db,http，grpcClient
 	dsn := "root:yjfc4883212@tcp(192.168.21.2:3315)/amp?charset=utf8mb4&parseTime=True&loc=Local"
-	apm.Infra.Init(apm.InfraDbOption(dsn))
+	otelEndpoint := "127.0.0.1:54317"
+	apm.Infra.Init(
+		apm.InfraDbOption(dsn),
+		apm.InfraEnableApm(otelEndpoint),
+	)
 
 	// 对sku服务客户端进行初始化
 	skuClient, err := apm.NewGrpcClient(":5001")
