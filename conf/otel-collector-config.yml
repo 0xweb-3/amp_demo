@@ -1,0 +1,53 @@
+receivers: # 接收器
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: [ "0.0.0.0:8888", "0.0.0.0:8889" ]
+
+processors:
+  batch:
+  # 后置采样的配置
+  tail_sampling:
+    decision_wait: 5s
+    num_traces: 1
+    expected_new_traces_per_sec: 1
+    policies:
+      [
+        {
+          name: error-always-sample,
+          type: boolean_attribute,
+          boolean_attribute: { key: error, value: true }
+        }
+      ]
+
+exporters: # 导出器
+  debug:
+  otlp/jaeger:
+    endpoint: http://jaeger:4317
+    tls:
+      insecure: true
+extensions:
+  health_check:
+    endpoint: "0.0.0.0:13133"
+  pprof:
+    endpoint: "0.0.0.0:1888"
+  zpages:
+    endpoint: "0.0.0.0:55679"
+
+service:
+  extensions: [ health_check, pprof, zpages ]
+  pipelines: # 定义怎么去用
+    traces: #
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ debug, otlp/jaeger ]
