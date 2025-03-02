@@ -15,6 +15,10 @@ type order struct{}
 var Order = &order{}
 
 func (o *order) Add(w http.ResponseWriter, r *http.Request) {
+	ctx, span := apm.Tracer.Start(r.Context(), "order_Add")
+
+	defer span.End()
+
 	// 获取参数
 	values := r.URL.Query()
 	var (
@@ -25,12 +29,12 @@ func (o *order) Add(w http.ResponseWriter, r *http.Request) {
 	// todo 检查用户信息
 
 	// todo 库存的扣减
-	_, err := grpcclient.SkuClient.DecreaseStock(context.TODO(), &protos.Sku{
+	_, err := grpcclient.SkuClient.DecreaseStock(ctx, &protos.Sku{
 		Id:  10,
 		Num: 1,
 	})
 	if err != nil {
-		apm.Logger.Error(context.TODO(), "Order_Add", map[string]any{
+		apm.Logger.Error(ctx, "Order_Add", map[string]any{
 			"uid":   uid,
 			"skuId": skuId,
 			"num":   num,
@@ -47,7 +51,7 @@ func (o *order) Add(w http.ResponseWriter, r *http.Request) {
 		Uid:   uint64(uid),
 	}).Error
 	if err != nil {
-		apm.Logger.Error(context.TODO(), "Order_Add", map[string]any{
+		apm.Logger.Error(ctx, "Order_Add", map[string]any{
 			"uid":   uid,
 			"skuId": skuId,
 			"num":   num,

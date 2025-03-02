@@ -61,7 +61,7 @@ func InfraRDbOption(host string, port int) InfraOption {
 	}
 }
 
-func InfraEnableApm(otelEndpoint) InfraOption {
+func InfraEnableApm(otelEndpoint string) InfraOption {
 	return func(infra *infra) {
 		ctx := context.Background()
 		res, err := resource.New(ctx,
@@ -115,4 +115,5 @@ func (i *infra) Init(options ...InfraOption) {
 	for _, option := range options {
 		option(i)
 	}
+	Tracer = otel.Tracer(internal.BuildInfo.AppName())
 }
