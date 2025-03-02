@@ -18,7 +18,7 @@ func Test_Grpc(t *testing.T) {
 	go func() {
 		s := NewGrpcServer(":8080")
 		protos.RegisterHelloServiceServer(s, &helloSvc{})
-		s.start()
+		s.Start()
 	}()
 
 	// 启动客户端

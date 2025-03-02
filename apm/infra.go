@@ -16,6 +16,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"time"
 )
 
@@ -41,6 +42,11 @@ func InfraDbOption(connectUrl string) InfraOption {
 		if err != nil {
 			panic(err)
 		}
+
+		// 启用 OpenTelemetry 追踪
+		if err = infra.DB.Use(tracing.NewPlugin()); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -52,6 +58,8 @@ func InfraRDbOption(host string, port int) InfraOption {
 			Addr: addr,
 			DB:   1,
 		})
+
+		Infra.Rdb.AddHook(&redisHook{})
 		// 检查链接是否成功
 		ctx := context.Background()
 		_, err = Infra.Rdb.Ping(ctx).Result()
@@ -78,6 +86,7 @@ func InfraEnableApm(otelEndpoint string) InfraOption {
 		conn, err := grpc.DialContext(ctx, otelEndpoint,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithBlock(),
+			grpc.WithTimeout(3*time.Second), // 设置 gRPC 连接超时
 		)
 		if err != nil {
 			panic(err)
