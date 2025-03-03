@@ -3,7 +3,17 @@ package apm
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
+	"strconv"
+	"time"
+)
+
+const (
+	httpTracername = "apm/http"
 )
 
 // HttpServer 自定义的 HTTP 服务器类型，它组合了 http.ServeMux 和 http.Server。
@@ -12,6 +22,7 @@ import (
 type HttpServer struct {
 	mux          *http.ServeMux // 路由器，用于将 HTTP 请求分发到不同的处理函数
 	*http.Server                // 内嵌 http.Server，提供基础的 HTTP 服务器功能
+	tracer       trace.Tracer
 }
 
 // NewHttpServer 是 HttpServer 的构造函数，创建一个新的 HttpServer 实例。
@@ -25,6 +36,7 @@ func NewHttpSever(addr string) *HttpServer {
 	// 返回一个包含 mux 和 server 的 HttpServer 实例
 	//return &HttpServer{mux: mux, Server: server}
 	s := &HttpServer{mux: mux, Server: server}
+	s.tracer = otel.Tracer(httpTracername)
 	globalStarters = append(globalStarters, s)
 	globalClosers = append(globalClosers, s)
 	return s
@@ -33,13 +45,67 @@ func NewHttpSever(addr string) *HttpServer {
 // Handle 是 HttpServer 的一个方法，用于注册处理指定 pattern 的请求。
 // pattern 是 URL 路径模式，handler 是处理请求的具体函数。
 func (h *HttpServer) Handle(pattern string, handler http.Handler) {
-	h.mux.Handle(pattern, handler) // 将请求与 handler 关联
+	//h.mux.Handle(pattern, handler) // 将请求与 handler 关联
+	h.mux.Handle(pattern, &traceHandler{
+		handler: handler,
+		tracer:  h.tracer,
+	})
 }
 
 // HandleFunc 是 HttpServer 的一个方法，简化了 Handle 的使用，直接传入一个函数。
 // handler 是一个函数，接收 http.ResponseWriter 和 http.Request 参数，处理请求并返回响应。
 func (h *HttpServer) HandleFunc(pattern string, handler func(w http.ResponseWriter, r *http.Request)) {
-	h.mux.HandleFunc(pattern, handler) // 将请求与 handler 函数关联
+	//h.mux.HandleFunc(pattern, handler) // 将请求与 handler 函数关联
+	h.mux.Handle(pattern, &traceHandler{
+		handler: http.HandlerFunc(handler),
+		tracer:  h.tracer,
+	})
+}
+
+type traceHandler struct {
+	handler http.Handler
+	tracer  trace.Tracer
+}
+
+type respWriterWrapper struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *respWriterWrapper) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func (t traceHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if t.tracer == nil {
+		t.handler.ServeHTTP(writer, request)
+		return
+	}
+	ctx := request.Context()
+	ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.HeaderCarrier(request.Header))
+	ctx, span := t.tracer.Start(ctx, request.URL.Path)
+	defer span.End()
+	request = request.Clone(ctx)
+	// 统计时长逻辑
+	start := time.Now()
+	respWrapper := &respWriterWrapper{ResponseWriter: writer}
+
+	t.handler.ServeHTTP(respWrapper, request)
+	if respWrapper.status == 0 {
+		respWrapper.status = http.StatusOK
+	}
+	end := time.Now()
+	span.SetAttributes(
+		attribute.KeyValue{
+			Key:   "http.status_code",
+			Value: attribute.StringValue(strconv.Itoa(respWrapper.status)),
+		})
+	span.SetAttributes(
+		attribute.KeyValue{
+			Key:   "http. duration",
+			Value: attribute.IntValue(int(end.Sub(start).Seconds())),
+		})
 }
 
 // Start 启动 HTTP 服务器，它在一个 goroutine 中运行 ListenAndServe。
